@@ -8,7 +8,8 @@ class AnswerExample
   include Connfu::Dsl
 
   on :offer do |call|
-    say('please record your greeting')
+    answer
+    say('i am answering your call even though i am just a robot')
     hangup
   end
 end
