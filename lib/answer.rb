@@ -2,7 +2,7 @@ require 'connfu'
 
 uri = URI.parse(ENV['CONNFU_URL'])
 jid = "#{uri.userinfo}@#{uri.host}"
-Connfu.setup jid, ENV['CONNFU_PASSWORD']
+Connfu.setup jid, ENV['CONNFU_PASSWD']
 
 class AnswerExample
   include Connfu::Dsl
