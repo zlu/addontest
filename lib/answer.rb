@@ -1,6 +1,8 @@
 require 'connfu'
 
-Connfu.setup ENV['CONNFU_URL'], ENV['CONNFU_PASSWORD']
+uri = URI.parse(ENV['CONNFU_URL'])
+jid = "#{uri.userinfo}@#{uri.host}"
+Connfu.setup jid, ENV['CONNFU_PASSWORD']
 
 class AnswerExample
   include Connfu::Dsl
