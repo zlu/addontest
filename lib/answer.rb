@@ -7,7 +7,7 @@ Connfu.setup jid, ENV['CONNFU_PASSWORD']
 class AnswerExample
   include Connfu::Dsl
 
-  on :incoming_call do |call|
+  on :offer do |call|
     say('please record your greeting')
     hangup
   end
