@@ -3,9 +3,10 @@ module Connfu
     def self.included(base)
       base.send(:include, Connfu::Continuation)
       base.send(:include, Connfu::Dsl::InstanceMethods)
+      base.send(:include, Connfu::Logging)
       base.extend Connfu::Dsl::ClassMethods
       base.class_eval do
-        attr_reader :server_address, :client_address
+        attr_reader :server_address, :client_address, :call_id
       end
     end
 
@@ -39,16 +40,14 @@ module Connfu
 
       end
 
-      def dial(params={})
-        self.metaclass.send(:define_method, :on_ready) do
-          Connfu.adaptor.send_command Connfu::Commands::Dial.new(params)
-        end
+      def dial(options={})
+        Queue.enqueue(Jobs::Dial, options)
       end
     end
 
     module InstanceMethods
 
-      def run
+      def run(*args)
       end
 
       def finished?
@@ -129,14 +128,17 @@ module Connfu
       end
 
       def handle_event(event)
-        l.debug "Handling event: #{event.inspect}"
+        logger.debug "Handling event: #{event.inspect}"
 
         if waiting_for?(event)
           continue(event)
         else
           case event
             when Connfu::Event::Offer
-              start(event)
+              start do
+                run event
+                hangup unless finished?
+              end
             when Connfu::Event::Ringing
               run_any_call_behaviour_for(:ringing)
             when Connfu::Event::Answered
@@ -150,12 +152,45 @@ module Connfu
         end
       end
 
+      def can_handle_event?(event)
+        event_matches_call_id?(event) || event_matches_last_command_id?(event)
+      end
+
+      def waiting_for?(event)
+        can_handle_event?(event) && @waiting_for && @waiting_for.detect do |e|
+          e === event
+        end
+      end
+
+      def send_command(command)
+        return if @finished
+        @last_command_id = Connfu.connection.send_command command
+        logger.debug "Sent command: #{command}"
+        result = wait_for Connfu::Event::Result, Connfu::Event::Error
+        logger.debug "Result from command #{result}"
+        if result.is_a?(Connfu::Event::Error)
+          raise
+        else
+          result
+        end
+      end
+
       private
+
+      def event_matches_call_id?(event)
+        event.call_id == call_id
+      end
+
+      def event_matches_last_command_id?(event)
+        event.respond_to?(:command_id) && @last_command_id == event.command_id
+      end
 
       def send_start_recording(options = {})
         command_options = { :to => server_address, :from => client_address }
         command_options[:max_length] = options[:max_length] * 1000 if options[:max_length]
         command_options[:beep] = options[:beep] if options.has_key?(:beep)
+        command_options[:format] = options[:format] if options.has_key?(:format)
+        command_options[:codec] = options[:codec] if options.has_key?(:codec)
         result = send_command Connfu::Commands::Recording::Start.new(command_options)
         @ref_id = result.ref_id
       end
@@ -165,30 +200,12 @@ module Connfu
         wait
       end
 
-      def waiting_for?(event)
-        @waiting_for && @waiting_for.detect do |e|
-          e === event
-        end
-      end
-
-      def send_command(command)
-        return if @finished
-        Connfu.adaptor.send_command command
-        l.debug "Sent command: #{command}"
-        result = wait_for Connfu::Event::Result, Connfu::Event::Error
-        l.debug "Result from command #{result}"
-        if result.is_a?(Connfu::Event::Error)
-          raise
-        else
-          result
-        end
-      end
     end
 
     def initialize(params)
       @server_address = params[:from]
       @client_address = params[:to]
+      @call_id = params[:call_id]
     end
-
   end
 end

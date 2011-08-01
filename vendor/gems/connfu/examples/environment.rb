@@ -4,14 +4,13 @@ require 'connfu'
 
 CONNFU_CONFIG = {
   'default' => {
-    :jid       => 'usera@127.0.0.1',
-    :password  => '1',
+    :connfu_uri => 'jid://usera:1@127.0.0.1',
     :redis_url => 'redis://localhost:6379'
   }
 }
-CONNFU_CONFIG['amazon'] = CONNFU_CONFIG['default'].merge(:jid => 'usera@46.137.85.52')
+CONNFU_CONFIG['amazon'] = CONNFU_CONFIG['default'].merge(:connfu_uri => 'jid://usera:1@46.137.85.52')
+CONNFU_CONFIG['linode'] = CONNFU_CONFIG['default'].merge(:connfu_uri => 'jid://usera:1@173.255.241.49')
 
 CONNFU_ENV = ENV['CONNFU_ENV'] || 'default'
 
-Connfu.setup CONNFU_CONFIG[CONNFU_ENV][:jid], CONNFU_CONFIG[CONNFU_ENV][:password]
-Connfu.redis_uri = CONNFU_CONFIG[CONNFU_ENV][:redis_url]
+Connfu.config.uri = CONNFU_CONFIG[CONNFU_ENV][:connfu_uri]

@@ -1,7 +1,10 @@
 #!/usr/bin/env ruby
 require File.expand_path('../environment', __FILE__)
 
-class DialExample
+require 'connfu/queue/resque'
+Resque.redis = CONNFU_CONFIG[CONNFU_ENV][:redis_url]
+
+class DialViaResqueQueueExample
   include Connfu::Dsl
 
   def update_status(status)
@@ -9,6 +12,7 @@ class DialExample
   end
 
   dial :to => 'sip:zlu@213.192.59.75', :from => "sip:usera@127.0.0.1"
+  dial :to => 'sip:openvoice@213.192.59.75', :from => "sip:usera@127.0.0.1"
 
   on :outgoing_call do |c|
     c.on_ringing do
@@ -17,6 +21,7 @@ class DialExample
     c.on_answer do
       update_status "The phone was answered!"
 
+      sleep 2 # avoid known prism/tropo bug
       say "Though I am but a robot, my love for you is real."
       hangup
     end
@@ -26,4 +31,4 @@ class DialExample
   end
 end
 
-Connfu.start DialExample
+Connfu.start DialViaResqueQueueExample

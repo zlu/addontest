@@ -21,8 +21,8 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w{README.md}
 
   s.add_dependency("blather", "0.5.3")
-  s.add_dependency("resque", "1.17.1")
 
+  s.add_development_dependency("resque", "1.17.1")
   s.add_development_dependency("rake", "0.9.2")
   s.add_development_dependency("rspec", ">2.5.0")
   s.add_development_dependency("flog", "2.5.1")

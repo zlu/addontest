@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Connfu::Ozone::Parser do
+describe Connfu::Rayo::Parser do
   describe "#parse_event_from" do
     context 'an offer iq' do
       before do
-        @node = create_presence(offer_presence('from-value', 'to-value', :from => "offer-from", :to => "offer-to"))
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @node = create_presence(offer_presence('from-value', 'to-value', :from => "offer-from", :to => "<sip:username@example.com>"))
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create an offer event" do
@@ -29,14 +29,17 @@ describe Connfu::Ozone::Parser do
       end
 
       it "should determine the to value of the offer" do
-        @event.to.should eq "offer-to"
+        @event.to[:address].should eq "<sip:username@example.com>"
+        @event.to[:username].should eq "username"
+        @event.to[:host].should eq "example.com"
+        @event.to[:scheme].should eq "sip"
       end
     end
 
     context 'a recording result iq' do
       before do
         @node = create_presence(recording_result_iq('call-id', 'ref-id'))
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a result event that contains the id from ref node" do
@@ -48,7 +51,7 @@ describe Connfu::Ozone::Parser do
     context "a recording stop complete presence" do
       before do
         @node = create_presence(recording_stop_presence('call-id', 'ref-id', 'file:///tmp/recording.mp3'))
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should be an instance of RecordingStopComplete" do
@@ -63,7 +66,7 @@ describe Connfu::Ozone::Parser do
     context "a normal result iq" do
       before do
         @node = create_presence(result_iq)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a result event" do
@@ -74,7 +77,7 @@ describe Connfu::Ozone::Parser do
     context "an error iq" do
       before do
         @node = create_presence(error_iq)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create an error event" do
@@ -85,7 +88,7 @@ describe Connfu::Ozone::Parser do
     context "a say complete iq" do
       before do
         @node = create_presence(say_complete_success)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a SayComplete event" do
@@ -100,7 +103,7 @@ describe Connfu::Ozone::Parser do
     context "an ask complete iq" do
       before do
         @node = create_presence(ask_complete_success)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create an AskComplete event" do
@@ -119,7 +122,7 @@ describe Connfu::Ozone::Parser do
     context "a transfer success presence" do
       before do
         @node = create_presence(transfer_success_presence)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a TransferSuccess event" do
@@ -134,7 +137,7 @@ describe Connfu::Ozone::Parser do
     context "a transfer timeout presence" do
       before do
         @node = create_presence(transfer_timeout_presence)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a TransferTimeout event" do
@@ -149,7 +152,7 @@ describe Connfu::Ozone::Parser do
     context "a transfer busy presence" do
       before do
         @node = create_presence(transfer_busy_presence)
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a TransferBusy event" do
@@ -164,7 +167,7 @@ describe Connfu::Ozone::Parser do
     context "an outgoing call ringing presence" do
       before do
         @node = create_presence(outgoing_call_ringing_presence("call-id"))
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a Ringing event" do
@@ -179,7 +182,7 @@ describe Connfu::Ozone::Parser do
     context "an outgoing call answered presence" do
       before do
         @node = create_presence(outgoing_call_answered_presence("call-id"))
-        @event = Connfu::Ozone::Parser.parse_event_from(@node)
+        @event = Connfu::Rayo::Parser.parse_event_from(@node)
       end
 
       it "should create a Ringing event" do

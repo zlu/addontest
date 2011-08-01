@@ -1,0 +1,8 @@
+--- 
+repository_url: git@github.com:zlu/play.git
+lock: false
+repository_class: Piston::Git::Repository
+format: 1
+handler: 
+  commit: 19126ba7d3a8e6c93f4b36240cb0ac16e2d0669b
+  branch: master

@@ -1,5 +1,11 @@
 module Connfu
   module Event
+    autoload :TransferEvent, 'connfu/event/transfer_event'
+    autoload :TransferSuccess, 'connfu/event/transfer_event'
+    autoload :TransferTimeout, 'connfu/event/transfer_event'
+    autoload :TransferRejected, 'connfu/event/transfer_event'
+    autoload :TransferBusy, 'connfu/event/transfer_event'
+
     class Presence
       attr_reader :call_id
 
@@ -18,7 +24,17 @@ module Connfu
         @presence_to = params[:presence_to]
         @call_id = params[:call_id]
         @from = params[:from]
-        @to = params[:to]
+        @to = parse_address(params[:to])
+      end
+
+      def parse_address(raw_address)
+        address, scheme, username, host = *raw_address.match(%r{^<([^:]+):([^@]+)@([^>]+)>$})
+        {
+          :address => address,
+          :scheme => scheme,
+          :username => username,
+          :host => host
+        }
       end
     end
 
@@ -35,19 +51,21 @@ module Connfu
     end
 
     class Result
-      attr_reader :call_id, :ref_id
+      attr_reader :call_id, :ref_id, :command_id
 
       def initialize(params = {})
         @call_id = params[:call_id]
         @ref_id = params[:ref_id]
+        @command_id = params[:command_id]
       end
     end
 
     class Error
-      attr_reader :call_id
+      attr_reader :call_id, :command_id
 
       def initialize(params = {})
         @call_id = params[:call_id]
+        @command_id = params[:command_id]
       end
     end
 
